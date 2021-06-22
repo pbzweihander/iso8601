@@ -1,6 +1,6 @@
 use core::fmt::{self, Display};
 
-use super::{Date, DateTime, Time};
+use super::{Date, DateTime, Offset, Time};
 
 impl Display for Date {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -20,20 +20,30 @@ impl Display for Time {
         // like `16:43:16.123+00:00`
         write!(
             f,
-            "{:02}:{:02}:{:02}.{}+{:02}:{:02}",
-            self.hour,
-            self.minute,
-            self.second,
-            self.millisecond,
-            self.tz_offset_hours,
-            self.tz_offset_hours
+            "{:02}:{:02}:{:02}.{}",
+            self.hour, self.minute, self.second, self.millisecond,
         )
+    }
+}
+
+impl Display for Offset {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // like `+00:00` or `Z`
+        if self.hours == 0 && self.minutes == 0 {
+            write!(f, "Z")
+        } else {
+            write!(f, "{:02}:{:02}", self.hours, self.minutes)
+        }
     }
 }
 
 impl Display for DateTime {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // like `16:43:16.123+00:00`
-        write!(f, "{}T{}", self.date, self.time)
+        write!(f, "{}T{}", self.date, self.time)?;
+        if let Some(offset) = self.offset {
+            write!(f, "{}", offset)?;
+        }
+        Ok(())
     }
 }

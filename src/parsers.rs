@@ -21,7 +21,7 @@ use nom::{
     Err, IResult,
 };
 
-use crate::{Date, DateTime, Duration, Time};
+use crate::{Date, DateTime, Duration, Offset, Time};
 
 #[cfg(test)]
 mod tests;
@@ -208,7 +208,7 @@ fn time_millisecond(fraction: f32) -> u32 {
     (1000.0 * fraction) as u32
 }
 
-// HH:MM:[SS][.(m*)][(Z|+...|-...)]
+// HH:MM:[SS][.(m*)]
 pub fn parse_time(i: &[u8]) -> IResult<&[u8], Time> {
     map(
         tuple((
@@ -217,39 +217,43 @@ pub fn parse_time(i: &[u8]) -> IResult<&[u8], Time> {
             time_minute,                                                   // MM
             opt(preceded(opt(tag(b":")), time_second)),                    // [SS]
             opt(map(preceded(one_of(",."), fractions), time_millisecond)), // [.(m*)]
-            opt(alt((timezone_hour, timezone_utc))),                       // [(Z|+...|-...)]
         )),
-        |(h, _, m, s, ms, z)| {
-            let (tz_offset_hours, tz_offset_minutes) = z.unwrap_or((0, 0));
-
-            Time {
-                hour: h,
-                minute: m,
-                second: s.unwrap_or(0),
-                millisecond: ms.unwrap_or(0),
-                tz_offset_hours,
-                tz_offset_minutes,
-            }
+        |(h, _, m, s, ms)| Time {
+            hour: h,
+            minute: m,
+            second: s.unwrap_or(0),
+            millisecond: ms.unwrap_or(0),
         },
     )(i)
 }
 
-fn timezone_hour(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
+// Z|(+|-)00:00
+pub fn parse_offset(i: &[u8]) -> IResult<&[u8], Offset> {
     map(
-        tuple((sign, time_hour, opt(preceded(opt(tag(b":")), time_minute)))),
-        |(s, h, m)| (s * (h as i32), s * (m.unwrap_or(0) as i32)),
+        alt((timezone_hour, timezone_utc)), // (Z|+...|-...)
+        |(hours, minutes)| Offset { hours, minutes },
     )(i)
 }
 
-fn timezone_utc(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
+fn timezone_hour(i: &[u8]) -> IResult<&[u8], (i32, u32)> {
+    map(
+        tuple((sign, time_hour, opt(preceded(opt(tag(b":")), time_minute)))),
+        |(s, h, m)| (s * (h as i32), m.unwrap_or(0)),
+    )(i)
+}
+
+fn timezone_utc(i: &[u8]) -> IResult<&[u8], (i32, u32)> {
     map(tag(b"Z"), |_| (0, 0))(i)
 }
 
 // Full ISO8601 datetime
 pub fn parse_datetime(i: &[u8]) -> IResult<&[u8], DateTime> {
     map(
-        separated_pair(parse_date, tag(b"T"), parse_time),
-        |(d, t)| DateTime { date: d, time: t },
+        tuple((
+            separated_pair(parse_date, tag(b"T"), parse_time),
+            opt(parse_offset),
+        )),
+        |((date, time), offset)| DateTime { date, time, offset },
     )(i)
 }
 

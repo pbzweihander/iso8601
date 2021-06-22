@@ -1,3 +1,5 @@
+#![allow(clippy::zero_prefixed_literal)]
+
 use iso8601::*;
 
 #[test]
@@ -28,8 +30,6 @@ fn test_millisecond() {
             minute: 43,
             second: 0,
             millisecond: 100,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
         }),
         time("16:43:00.1")
     );
@@ -39,8 +39,6 @@ fn test_millisecond() {
             minute: 43,
             second: 0,
             millisecond: 120,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
         }),
         time("16:43:00.12")
     );
@@ -50,8 +48,6 @@ fn test_millisecond() {
             minute: 43,
             second: 0,
             millisecond: 123,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
         }),
         time("16:43:00.123")
     );
@@ -61,8 +57,6 @@ fn test_millisecond() {
             minute: 43,
             second: 0,
             millisecond: 432,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
         }),
         time("16:43:00.4321")
     );
@@ -72,8 +66,6 @@ fn test_millisecond() {
             minute: 43,
             second: 0,
             millisecond: 432,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
         }),
         time("16:43.4321")
     );
@@ -83,8 +75,6 @@ fn test_millisecond() {
             minute: 43,
             second: 11,
             millisecond: 432,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
         }),
         time("16:43:11.4321")
     );
@@ -95,8 +85,6 @@ fn test_millisecond() {
             minute: 43,
             second: 0,
             millisecond: 100,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
         }),
         time("16:43:00,1")
     );
@@ -107,8 +95,6 @@ fn test_millisecond() {
             minute: 05,
             second: 06,
             millisecond: 123,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
         }),
         time("04:05:06.12345")
     );
@@ -125,56 +111,35 @@ fn test_millisecond() {
                 minute: 05,
                 second: 06,
                 millisecond: 123,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 0,
+                minutes: 0,
+            }),
         }),
         datetime("2001-W05-6T04:05:06.12345Z")
     );
 
     assert_eq!(
-        Ok(Time {
-            hour: 16,
-            minute: 43,
-            second: 16,
-            millisecond: 123,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+        Ok(Offset {
+            hours: 0,
+            minutes: 0,
         }),
-        time("16:43:16.123")
+        offset("+00:00")
     );
     assert_eq!(
-        Ok(Time {
-            hour: 16,
-            minute: 43,
-            second: 16,
-            millisecond: 123,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+        Ok(Offset {
+            hours: 0,
+            minutes: 0,
         }),
-        time("16:43:16.123+00:00")
+        offset("-00:00")
     );
     assert_eq!(
-        Ok(Time {
-            hour: 16,
-            minute: 43,
-            second: 16,
-            millisecond: 123,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+        Ok(Offset {
+            hours: 5,
+            minutes: 0,
         }),
-        time("16:43:16.123-00:00")
-    );
-    assert_eq!(
-        Ok(Time {
-            hour: 16,
-            minute: 43,
-            second: 16,
-            millisecond: 123,
-            tz_offset_hours: 5,
-            tz_offset_minutes: 0
-        }),
-        time("16:43:16.123+05:00")
+        offset("+05:00")
     );
 }
 
@@ -187,8 +152,6 @@ fn test_time() {
             minute: 43,
             second: 16,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
         })
     );
     assert_eq!(
@@ -198,36 +161,12 @@ fn test_time() {
             minute: 43,
             second: 0,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
         })
     );
 
     assert!(time("20:").is_err());
     assert!(time("20p42p16").is_err());
     assert!(time("pppp").is_err());
-}
-
-#[test]
-fn test_time_set_tz() {
-    let original = Time {
-        hour: 0,
-        minute: 0,
-        second: 0,
-        millisecond: 0,
-        tz_offset_hours: 0,
-        tz_offset_minutes: 0,
-    };
-    let expected = Time {
-        hour: 0,
-        minute: 0,
-        second: 0,
-        millisecond: 0,
-        tz_offset_hours: 2,
-        tz_offset_minutes: 30,
-    };
-
-    assert_eq!(expected, original.set_tz((2, 30)));
 }
 
 #[test]
@@ -239,8 +178,6 @@ fn short_time1() {
             minute: 48,
             second: 0,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
         })
     );
 }
@@ -253,22 +190,6 @@ fn short_time2() {
             minute: 48,
             second: 0,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
-        })
-    );
-}
-#[test]
-fn short_time3() {
-    assert_eq!(
-        time("16:48Z"),
-        Ok(Time {
-            hour: 16,
-            minute: 48,
-            second: 0,
-            millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
         })
     );
 }
@@ -281,8 +202,6 @@ fn short_time4() {
             minute: 48,
             second: 0,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
         })
     );
 }
@@ -295,22 +214,6 @@ fn short_time5() {
             minute: 48,
             second: 0,
             millisecond: 100,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
-        })
-    );
-}
-#[test]
-fn short_time6() {
-    assert_eq!(
-        time("164800.1Z"),
-        Ok(Time {
-            hour: 16,
-            minute: 48,
-            second: 0,
-            millisecond: 100,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
         })
     );
 }
@@ -323,37 +226,37 @@ fn short_time7() {
             minute: 48,
             second: 0,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
         })
     );
 }
 
 #[test]
-fn short_twtz1() {
+fn short_offset1() {
     assert_eq!(
-        time("1648Z"),
-        Ok(Time {
-            hour: 16,
-            minute: 48,
-            second: 0,
-            millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+        offset("Z"),
+        Ok(Offset {
+            hours: 0,
+            minutes: 0,
         })
     );
 }
 #[test]
-fn short_twtz2() {
+fn short_offset2() {
     assert_eq!(
-        time("16:48Z"),
-        Ok(Time {
-            hour: 16,
-            minute: 48,
-            second: 0,
-            millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+        offset("+1648"),
+        Ok(Offset {
+            hours: 16,
+            minutes: 48,
+        })
+    );
+}
+#[test]
+fn short_offset3() {
+    assert_eq!(
+        offset("-1648"),
+        Ok(Offset {
+            hours: -16,
+            minutes: 48,
         })
     );
 }
@@ -373,9 +276,8 @@ fn short_dtim1() {
                 minute: 48,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0,
-            }
+            },
+            offset: None,
         })
     );
 }
@@ -394,9 +296,11 @@ fn short_dtim2() {
                 minute: 48,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0,
             },
+            offset: Some(Offset {
+                hours: 0,
+                minutes: 0,
+            }),
         })
     );
 }
@@ -415,74 +319,13 @@ fn short_dtim3() {
                 minute: 21,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0,
             },
+            offset: Some(Offset {
+                hours: 0,
+                minutes: 0,
+            }),
         })
     );
-}
-
-#[test]
-fn test_time_with_timezone() {
-    assert_eq!(
-        Ok(Time {
-            hour: 16,
-            minute: 43,
-            second: 16,
-            millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
-        }),
-        time("16:43:16")
-    );
-    assert_eq!(
-        Ok(Time {
-            hour: 16,
-            minute: 43,
-            second: 16,
-            millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
-        }),
-        time("16:43:16Z")
-    );
-    assert_eq!(
-        Ok(Time {
-            hour: 16,
-            minute: 43,
-            second: 16,
-            millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
-        }),
-        time("16:43:16+00:00")
-    );
-    assert_eq!(
-        Ok(Time {
-            hour: 16,
-            minute: 43,
-            second: 16,
-            millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
-        }),
-        time("16:43:16-00:00")
-    );
-    assert_eq!(
-        Ok(Time {
-            hour: 16,
-            minute: 43,
-            second: 16,
-            millisecond: 0,
-            tz_offset_hours: 5,
-            tz_offset_minutes: 0,
-        }),
-        time("16:43:16+05:00")
-    );
-
-    assert!(time("20:").is_err());
-    assert!(time("20p42p16").is_err());
-    assert!(time("pppp").is_err());
 }
 
 #[test]
@@ -613,9 +456,11 @@ fn test_datetime_correct() {
                 minute: 44,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 0,
+                minutes: 0,
+            }),
         })
     );
     assert_eq!(
@@ -631,9 +476,11 @@ fn test_datetime_correct() {
                 minute: 45,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 0,
+                minutes: 0,
+            }),
         })
     );
     assert_eq!(
@@ -649,9 +496,11 @@ fn test_datetime_correct() {
                 minute: 46,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 0,
+                minutes: 0,
+            }),
         })
     );
     assert_eq!(
@@ -667,9 +516,11 @@ fn test_datetime_correct() {
                 minute: 47,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 0,
+                minutes: 0,
+            }),
         })
     );
     assert_eq!(
@@ -685,9 +536,11 @@ fn test_datetime_correct() {
                 minute: 0,
                 second: 22,
                 millisecond: 0,
-                tz_offset_hours: 5,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 5,
+                minutes: 0,
+            }),
         })
     );
     assert_eq!(
@@ -703,9 +556,11 @@ fn test_datetime_correct() {
                 minute: 0,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 1,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 1,
+                minutes: 0,
+            }),
         })
     );
     assert_eq!(
@@ -721,9 +576,11 @@ fn test_datetime_correct() {
                 minute: 30,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 2,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 2,
+                minutes: 0,
+            }),
         })
     );
     assert_eq!(
@@ -739,9 +596,11 @@ fn test_datetime_correct() {
                 minute: 07,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 2,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 2,
+                minutes: 0,
+            }),
         })
     );
     assert_eq!(
@@ -757,9 +616,8 @@ fn test_datetime_correct() {
                 minute: 43,
                 second: 16,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: None,
         })
     );
     assert_eq!(
@@ -775,9 +633,8 @@ fn test_datetime_correct() {
                 minute: 43,
                 second: 16,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: None,
         })
     );
     assert_eq!(
@@ -793,9 +650,11 @@ fn test_datetime_correct() {
                 minute: 5,
                 second: 6,
                 millisecond: 0,
-                tz_offset_hours: 7,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 7,
+                minutes: 0,
+            }),
         })
     );
     assert_eq!(
@@ -811,9 +670,11 @@ fn test_datetime_correct() {
                 minute: 5,
                 second: 6,
                 millisecond: 0,
-                tz_offset_hours: 7,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 7,
+                minutes: 0,
+            }),
         })
     );
     assert_eq!(
@@ -828,9 +689,11 @@ fn test_datetime_correct() {
                 minute: 5,
                 second: 6,
                 millisecond: 0,
-                tz_offset_hours: 7,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 7,
+                minutes: 0,
+            }),
         })
     );
     assert_eq!(
@@ -845,9 +708,11 @@ fn test_datetime_correct() {
                 minute: 5,
                 second: 6,
                 millisecond: 0,
-                tz_offset_hours: 7,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 7,
+                minutes: 0,
+            }),
         })
     );
     assert_eq!(
@@ -862,9 +727,11 @@ fn test_datetime_correct() {
                 minute: 30,
                 second: 48,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 0,
+                minutes: 0,
+            }),
         })
     );
     assert_eq!(
@@ -880,9 +747,11 @@ fn test_datetime_correct() {
                 minute: 30,
                 second: 48,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 0,
+                minutes: 0,
+            }),
         })
     );
     assert_eq!(
@@ -898,9 +767,11 @@ fn test_datetime_correct() {
                 minute: 05,
                 second: 06,
                 millisecond: 123,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 0,
+                minutes: 0,
+            }),
         })
     );
     assert_eq!(
@@ -916,9 +787,11 @@ fn test_datetime_correct() {
                 minute: 05,
                 second: 06,
                 millisecond: 123,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
-            }
+            },
+            offset: Some(Offset {
+                hours: 0,
+                minutes: 0,
+            }),
         })
     );
 }
@@ -933,8 +806,6 @@ fn issue12_regression_1() {
             minute: 48,
             second: 1,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
         }),
         time(input)
     );
@@ -950,8 +821,6 @@ fn issue12_regression_2() {
             minute: 5,
             second: 6,
             millisecond: 122,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
         }),
         time(input)
     );

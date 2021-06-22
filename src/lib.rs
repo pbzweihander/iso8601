@@ -50,16 +50,21 @@ pub struct Time {
     pub second: u32,
     /// everything after a `.`
     pub millisecond: u32,
-    /// depends on where you're at
-    pub tz_offset_hours: i32,
-    pub tz_offset_minutes: i32,
 }
 
-/// Compound struct, holds Date and Time
+/// A timezone offset object
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Default)]
+pub struct Offset {
+    pub hours: i32,
+    pub minutes: u32,
+}
+
+/// Compound struct, holds Date, Time, and Offset
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub struct DateTime {
     pub date: Date,
     pub time: Time,
+    pub offset: Option<Offset>,
 }
 
 /// A time duration.
@@ -77,15 +82,6 @@ pub enum Duration {
     },
     /// consists of week units
     Weeks(u32),
-}
-
-impl Time {
-    pub fn set_tz(&self, tzo: (i32, i32)) -> Time {
-        let mut t = *self;
-        t.tz_offset_hours = tzo.0;
-        t.tz_offset_minutes = tzo.1;
-        t
-    }
 }
 
 impl Default for Date {
@@ -111,6 +107,24 @@ impl FromStr for Time {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         time(s)
+    }
+}
+
+impl FromStr for Offset {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        offset(s)
+    }
+}
+
+impl Default for DateTime {
+    fn default() -> DateTime {
+        DateTime {
+            date: Default::default(),
+            time: Default::default(),
+            offset: Some(Default::default()),
+        }
     }
 }
 
@@ -210,6 +224,27 @@ pub fn date(string: &str) -> Result<Date, String> {
 /// ```
 pub fn time(string: &str) -> Result<Time, String> {
     if let Ok((_, parsed)) = parsers::parse_time(string.as_bytes()) {
+        Ok(parsed)
+    } else {
+        Err(format!("Parser Error: {}", string))
+    }
+}
+
+/// Parses a timezone offset string.
+///
+/// A string can have one of the following formats:
+///
+/// * `Z`
+/// * `(+|-)00:00`
+/// * `(+|-)0000`
+///
+/// ## Example
+///
+/// ```rust
+/// let offset = iso8601::offset("+09:00").unwrap();
+/// ```
+pub fn offset(string: &str) -> Result<Offset, String> {
+    if let Ok((_, parsed)) = parsers::parse_offset(string.as_bytes()) {
         Ok(parsed)
     } else {
         Err(format!("Parser Error: {}", string))
